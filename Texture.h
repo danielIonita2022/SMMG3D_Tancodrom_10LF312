@@ -6,10 +6,7 @@ class Texture
 {
 public:
 	Texture(const std::string& strTexturePath);
-	~Texture();
-	void texUnit(Shader& shader, const char* uniform, GLuint unit);
-	// Binds a texture
-	void Bind();
+	GLuint getTextureID() const;
 	// Unbinds a texture
 	void Unbind();
 	// Deletes a texture

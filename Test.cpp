@@ -1,6 +1,7 @@
 #pragma once
 #include "Skybox.h"
 #include "Camera.h"
+#include "Texture.h"
 
 #pragma comment (lib, "glfw3dll.lib")
 #pragma comment (lib, "glew32.lib")
@@ -12,6 +13,35 @@ Camera* pCamera;
 // timing
 double deltaTime = 0.0f;	// time between current frame and last frame
 double lastFrame = 0.0f;
+unsigned int floorVAO = 0;
+
+void renderFloor()
+{
+	unsigned int floorVBO;
+    if (floorVAO == 0) {
+        float floorVertices[] = {
+        5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
+
+        5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
+        5.0f, -0.5f, -5.0f,  1.0f, 1.0f
+        };
+        glGenVertexArrays(1, &floorVAO);
+        glGenBuffers(1, &floorVBO);
+        glBindVertexArray(floorVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), &floorVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+	glBindVertexArray(floorVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
 
 void processInput(GLFWwindow* window)
 {
@@ -64,8 +94,15 @@ void Initialize()
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    std::string strFullExeFileName = argv[0];
+    std::string strExePath;
+    const size_t last_slash_idx = strFullExeFileName.rfind('\\');
+    if (std::string::npos != last_slash_idx) {
+        strExePath = strFullExeFileName.substr(0, last_slash_idx);
+    }
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -83,6 +120,7 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
     glewInit();
     Skybox skybox;
     
@@ -92,6 +130,17 @@ int main()
     //Initialize();
     glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
+
+    
+
+    Texture floorTexture(strExePath + "\\terrain.png");
+    GLuint floorTexId = floorTexture.getTextureID();
+    
+	Shader floorShader("Floor.vs", "Floor.fs");
+
+    floorShader.Use();
+    floorShader.SetInt("texture1", 0);
+
     pCamera = new Camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0, 0.0, 3.0));
     while (!glfwWindowShouldClose(window))
     {
@@ -99,10 +148,26 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         processInput(window);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+        //glDepthMask(false);
+        
+        
         glm::mat4 projection = pCamera->GetProjectionMatrix();
         glm::mat4 view = pCamera->GetViewMatrix();
-        
         skybox.draw(view, projection);
+
+        floorShader.Use();
+		floorShader.SetMat4("projection", projection);
+		floorShader.SetMat4("view", view);
+        //glActiveTexture(GL_TEXTURE0);
+        
+		glBindTexture(GL_TEXTURE_2D, floorTexId);
+        glm::mat4 model;
+        floorShader.SetMat4("model", model);
+		renderFloor();
+        
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

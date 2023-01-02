@@ -31,6 +31,10 @@ Texture::Texture(const std::string& strTexturePath)
 	}
 	stbi_image_free(data);
 }
+GLuint Texture::getTextureID() const
+{
+	return textureId;
+}
 void Texture::Unbind()
 {
 	glBindTexture(GL_TEXTURE_2D, 0);

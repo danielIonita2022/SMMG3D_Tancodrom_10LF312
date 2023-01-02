@@ -1,10 +1,8 @@
 #include "Skybox.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 Skybox::Skybox()
 {
-    shader = new Shader("Skybox");
+    shader = new Shader("Skybox.vs", "Skybox.fs");
 
     float skyboxVertices[] = {
         // positions          

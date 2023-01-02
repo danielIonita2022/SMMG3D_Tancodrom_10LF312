@@ -15,11 +15,12 @@
 class Shader
 {
 public:
-    Shader(const std::string& fileName);
+    Shader(const char* vertexPath, const char* fragmentPath);
     ~Shader();
 
     void Use() const;
     unsigned int GetID() const;
+    void Init(const char* vertexPath, const char* fragmentPath);
 
     // MVP
     unsigned int loc_model_matrix;
@@ -27,20 +28,15 @@ public:
     unsigned int loc_projection_matrix;
 
     // utility uniform functions
-    void SetInt(const char* name, int value) const;
+    void SetInt(const std::string& name, int value) const;
     void SetFloat(const std::string& name, float value) const;
     void SetVec3(const std::string& name, const glm::vec3& value) const;
     void SetVec3(const std::string& name, float x, float y, float z) const;
-    void SetMat4(const char* name, const glm::mat4& mat) const;
+    void SetMat4(const std::string& name, const glm::mat4& mat) const;
 
 private:
-    std::string LoadShader(const std::string& fileName);
-    void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const std::string& errorMessage);
-    GLuint CreateShader(const std::string& text, unsigned int type);
-
-private:
+    void CheckCompileErrors(unsigned int shaderStencilTesting, std::string type);
+    
     unsigned int ID;
-	unsigned int m_shaders[2];
-	unsigned int m_uniforms[1];
     
 };

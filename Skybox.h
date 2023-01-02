@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <glfw3.h>
 #include "Shader.h"
+#include <stb_image.h>
 
 class Skybox
 {
