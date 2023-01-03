@@ -37,13 +37,14 @@ public:
 	void ProcessKeyboard(MovementType direction, float deltaTime);
 	void MouseControl(float xPos, float yPos);
 	void ProcessMouseScroll(float yOffset);
+	glm::vec3 GetPosition();
 
 private:
 	void ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch = true);
 	void UpdateCameraVectors();
 
 protected:
-	const float cameraSpeedFactor = 2.5f;
+	const float cameraSpeedFactor = 1.5f;
 	const float mouseSensitivity = 0.1f;
 
 	// Perspective properties

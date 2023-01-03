@@ -1,12 +1,16 @@
 #include "Texture.h"
 
-Texture::Texture(const std::string& strTexturePath)
+Texture::Texture(const char* image, const char* texType, GLuint slot, GLenum format, GLenum pixelType)
 {
 	textureId = -1;
+
+	// Assigns the type of the texture ot the texture object
+	type = texType;
+	
 	// load image, create texture and generate mipmaps
 	int width, height, nrChannels;
 	//stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-	unsigned char* data = stbi_load(strTexturePath.c_str(), &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load(image, &width, &height, &nrChannels, 0);
 	if (data) {
 		GLenum format{};
 		if (nrChannels == 1)
@@ -16,6 +20,8 @@ Texture::Texture(const std::string& strTexturePath)
 		else if (nrChannels == 4)
 			format = GL_RGBA;
 		glGenTextures(1, &textureId);
+		glActiveTexture(GL_TEXTURE0 + slot);
+		unit = slot;
 		glBindTexture(GL_TEXTURE_2D, textureId);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -27,13 +33,28 @@ Texture::Texture(const std::string& strTexturePath)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 	else {
-		std::cout << "Failed to load texture: " << strTexturePath << std::endl;
+		std::cout << "Failed to load texture: " << image << std::endl;
 	}
 	stbi_image_free(data);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 GLuint Texture::getTextureID() const
 {
 	return textureId;
+}
+void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
+{
+	// Gets the location of the uniform
+	GLuint texUni = glGetUniformLocation(shader.GetID(), uniform);
+	// Shader needs to be activated before changing the value of a uniform
+	shader.Use();
+	// Sets the value of the uniform
+	glUniform1i(texUni, unit);
+}
+void Texture::Bind()
+{
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(GL_TEXTURE_2D, textureId);
 }
 void Texture::Unbind()
 {

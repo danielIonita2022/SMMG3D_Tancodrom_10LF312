@@ -5,12 +5,15 @@
 class Texture
 {
 public:
-	Texture(const std::string& strTexturePath);
+	const char* type;
+	GLuint unit;
+	Texture(const char* image, const char* texType, GLuint slot, GLenum format, GLenum pixelType);
 	GLuint getTextureID() const;
-	// Unbinds a texture
+	void texUnit(Shader& shader, const char* uniform, GLuint unit);
+	void Bind();
 	void Unbind();
-	// Deletes a texture
 	void Delete();
+	
 private:
 	GLuint textureId;
 };

@@ -109,6 +109,11 @@ void Camera::ProcessMouseScroll(float yOffset)
 		FoVy = 90.0f;
 }
 
+glm::vec3 Camera::GetPosition()
+{
+	return position;
+}
+
 void Camera::ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch)
 {
 	yaw += xOffset;

@@ -2,6 +2,7 @@
 #include "Skybox.h"
 #include "Camera.h"
 #include "Texture.h"
+#include "Mesh.h"
 
 #pragma comment (lib, "glfw3dll.lib")
 #pragma comment (lib, "glew32.lib")
@@ -13,35 +14,37 @@ Camera* pCamera;
 // timing
 double deltaTime = 0.0f;	// time between current frame and last frame
 double lastFrame = 0.0f;
-unsigned int floorVAO = 0;
 
-void renderFloor()
+
+Vertex vertices[] =
+{ //               COORDINATES           /            COLORS          /           TexCoord         /       NORMALS         //
+    Vertex{glm::vec3(-25.0f, 0.0f,  25.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
+    Vertex{glm::vec3(-25.0f, 0.0f, -25.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
+    Vertex{glm::vec3(25.0f, 0.0f, -25.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
+    Vertex{glm::vec3(25.0f, 0.0f,  25.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}
+};
+
+GLuint indices[] =
 {
-	unsigned int floorVBO;
-    if (floorVAO == 0) {
-        float floorVertices[] = {
-        5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
-        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
+    0, 1, 2,
+    0, 2, 3
+};
 
-        5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
-        5.0f, -0.5f, -5.0f,  1.0f, 1.0f
-        };
-        glGenVertexArrays(1, &floorVAO);
-        glGenBuffers(1, &floorVBO);
-        glBindVertexArray(floorVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), &floorVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-        glBindVertexArray(0);
-    }
-	glBindVertexArray(floorVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-}
+Vertex grassVertices[] =
+{
+    Vertex{glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
+    Vertex{glm::vec3(0.0f, 0.0f,  0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
+    Vertex{glm::vec3(1.0f, 0.0f,  0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
+    Vertex{glm::vec3(1.0f,  1.0f,  0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}
+};
+
+Vertex revgrassVertices[] =
+{
+    Vertex{glm::vec3(1.5f,  1.0f,  -0.55f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
+    Vertex{glm::vec3(1.5f, 0.0f,  -0.55f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
+    Vertex{glm::vec3(1.5f, 0.0f, 0.45f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
+    Vertex{glm::vec3(1.5f,  1.0f,  0.45f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}
+};
 
 void processInput(GLFWwindow* window)
 {
@@ -132,16 +135,45 @@ int main(int argc, char** argv)
     glDisable(GL_CULL_FACE);
 
     
+    std::string image = strExePath + "\\terrain.png";
+    Texture textures[]{Texture(image.c_str(), "texture1", 0, GL_RGBA, GL_UNSIGNED_BYTE)};
+    GLuint floorTexId = textures[0].getTextureID();
 
-    Texture floorTexture(strExePath + "\\terrain.png");
-    GLuint floorTexId = floorTexture.getTextureID();
+	std::string grassImage = strExePath + "\\grass.png";
+	Texture grassTextures[]{ Texture(grassImage.c_str(), "texture1", 0, GL_RGBA, GL_UNSIGNED_BYTE) };
+	GLuint grassTexId = grassTextures[0].getTextureID();
+    
+    // positions of grass patches
+    std::vector <glm::vec3> vegetation;
+    float high = 15.0f;
+    for (float i = -15.0f; i < high; i += 1.0f)
+    {
+        for (float j = -15.0f; j < high; j += 1.0f)
+        {
+            vegetation.emplace_back(glm::vec3(i, 0, j));
+        }
+    }
     
 	Shader floorShader("Floor.vs", "Floor.fs");
 
-    floorShader.Use();
-    floorShader.SetInt("texture1", 0);
+    std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
+    std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
+    std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
+    
+    std::vector <Vertex> grassVerts(grassVertices, grassVertices + sizeof(grassVertices) / sizeof(Vertex));
+    std::vector <Texture> grassTex(grassTextures, grassTextures + sizeof(grassTextures) / sizeof(Texture));
+    
+    std::vector <Vertex> revGrassVerts(revgrassVertices, revgrassVertices + sizeof(revgrassVertices) / sizeof(Vertex));
+    
+    // Create floor mesh
+    Mesh floor(verts, ind, tex);
+	Mesh grass(grassVerts, ind, grassTex);
+    Mesh revGrass(revGrassVerts, ind, grassTex);
 
-    pCamera = new Camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0, 0.0, 3.0));
+    /*floorShader.Use();
+    floorShader.SetInt("texture1", 0);*/
+
+    pCamera = new Camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 0.5f, 2.0f));
     while (!glfwWindowShouldClose(window))
     {
         double currentFrame = glfwGetTime();
@@ -149,24 +181,25 @@ int main(int argc, char** argv)
         lastFrame = currentFrame;
         processInput(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_DEPTH_TEST);
-        //glDepthMask(false);
         
         
+        glm::mat4 model;
         glm::mat4 projection = pCamera->GetProjectionMatrix();
         glm::mat4 view = pCamera->GetViewMatrix();
         skybox.draw(view, projection);
-
+		model = glm::mat4();
         floorShader.Use();
-		floorShader.SetMat4("projection", projection);
-		floorShader.SetMat4("view", view);
-        //glActiveTexture(GL_TEXTURE0);
-        
-		glBindTexture(GL_TEXTURE_2D, floorTexId);
-        glm::mat4 model;
-        floorShader.SetMat4("model", model);
-		renderFloor();
-        
+        floor.Draw(floorShader, *pCamera);
+        for (GLuint i = 0; i < vegetation.size(); ++i)
+        {
+            //glEnable(GL_DEPTH_TEST);
+            //glEnable(GL_BLEND);
+            glDepthMask(true);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+			grass.Draw(floorShader, *pCamera, model);
+            revGrass.Draw(floorShader, *pCamera, model);
+        }
         
         glfwSwapBuffers(window);
         glfwPollEvents();
