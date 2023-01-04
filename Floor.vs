@@ -7,6 +7,7 @@ layout (location = 3) in vec2 aTexCoords;
 out vec3 Normal;
 out vec3 Color;
 out vec2 TexCoords;
+out vec3 currentPos;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -14,6 +15,7 @@ uniform mat4 projection;
 
 void main()
 {   
+    currentPos = vec3(model * vec4(aPos, 1.0f));
     Normal = aNormal;
     Color = aColor;
     TexCoords = aTexCoords;
