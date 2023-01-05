@@ -1,6 +1,6 @@
 #include "Skybox.h"
 
-Skybox::Skybox()
+Skybox::Skybox(const std::vector<std::string>& skyboxFaces)
 {
     shader = new Shader("Skybox.vs", "Skybox.fs");
 
@@ -55,7 +55,7 @@ Skybox::Skybox()
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    cubemapTexture = loadCubemap(faces);
+    cubemapTexture = loadCubemap(skyboxFaces);
     shader->Use();
     shader->SetInt("skybox", 0);
 }
@@ -78,6 +78,11 @@ void Skybox::draw(const glm::mat4& view, const glm::mat4& projection)
 Shader* Skybox::getShader() const
 {
     return shader;
+}
+
+void Skybox::setCubemapTexture(unsigned int cubemapTex)
+{
+    cubemapTexture = cubemapTex;
 }
 
 GLuint Skybox::loadCubemap(const std::vector<std::string>& faces)

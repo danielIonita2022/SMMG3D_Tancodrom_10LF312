@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "Texture.h"
 #include "Mesh.h"
+#include "Model.h"
 
 #pragma comment (lib, "glfw3dll.lib")
 #pragma comment (lib, "glew32.lib")
@@ -14,7 +15,8 @@ Camera* pCamera;
 // timing
 double deltaTime = 0.0f;	// time between current frame and last frame
 double lastFrame = 0.0f;
-
+bool day = true;
+bool buttonPressed = false;
 
 Vertex vertices[] =
 { //               COORDINATES           /            COLORS          /           TexCoord         /       NORMALS         //
@@ -46,6 +48,36 @@ Vertex revgrassVertices[] =
     Vertex{glm::vec3(1.5f,  1.0f,  0.45f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}
 };
 
+
+Vertex lightVertices[] =
+{
+    Vertex{glm::vec3(10.0f, 10.0f,  10.2f)},
+    Vertex{glm::vec3(10.0f, 10.0f, 10.0f)},
+    Vertex{glm::vec3(10.2f, 10.0f, 10.0f)},
+    Vertex{glm::vec3(10.2f, 10.0f,  10.2f)},
+    Vertex{glm::vec3(10.0f,  10.2f,  10.2f)},
+    Vertex{glm::vec3(10.0f,  10.2f, 10.0f)},
+    Vertex{glm::vec3(10.2f,  10.2f, 10.0f)},
+    Vertex{glm::vec3(10.2f,  10.2f,  10.f)}
+};
+
+GLuint lightIndices[] =
+{
+    0, 1, 2,
+    0, 2, 3,
+    0, 4, 7,
+    0, 7, 3,
+    3, 7, 6,
+    3, 6, 2,
+    2, 6, 5,
+    2, 5, 1,
+    1, 5, 4,
+    1, 4, 0,
+    4, 5, 6,
+    4, 6, 7
+};
+
+
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -69,6 +101,16 @@ void processInput(GLFWwindow* window)
         glfwGetWindowSize(window, &width, &height);
         pCamera->Reshape(width, height);
 
+    }
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+    {
+        day = false;
+        buttonPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {   
+        day = true;
+        buttonPressed = true;
     }
 }
 
@@ -125,7 +167,27 @@ int main(int argc, char** argv)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     glewInit();
-    Skybox skybox;
+    std::vector<std::string> dayFaces
+    {
+            "../../../External/skybox/right.jpg",
+            "../../../External/skybox/left.jpg",
+            "../../../External/skybox/top.jpg",
+            "../../../External/skybox/bottom.jpg",
+            "../../../External/skybox/front.jpg",
+            "../../../External/skybox/back.jpg"
+    };
+    std::vector<std::string> nightFaces
+    {
+            "../../../External/new_skybox_night/right.jpg",
+            "../../../External/new_skybox_night/left.jpg",
+            "../../../External/new_skybox_night/top.jpg",
+            "../../../External/new_skybox_night/bottom.jpg",
+            "../../../External/new_skybox_night/front.jpg",
+            "../../../External/new_skybox_night/back.jpg"
+    };
+
+    
+    Skybox skybox(dayFaces);
     
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -165,14 +227,37 @@ int main(int argc, char** argv)
     
     std::vector <Vertex> revGrassVerts(revgrassVertices, revgrassVertices + sizeof(revgrassVertices) / sizeof(Vertex));
     
+    Shader lightShader("Light.vs", "Light.fs");
+    std::vector <Vertex> lightVerts(lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
+    std::vector <GLuint> lightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
+    // Crate light mesh
+    Mesh light(lightVerts, lightInd, tex);
+    
+    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+    glm::mat4 lightModel = glm::mat4(1.0f);
+    lightModel = glm::translate(lightModel, lightPos);
+
     // Create floor mesh
     Mesh floor(verts, ind, tex);
 	Mesh grass(grassVerts, ind, grassTex);
     Mesh revGrass(revGrassVerts, ind, grassTex);
 
-    /*floorShader.Use();
-    floorShader.SetInt("texture1", 0);*/
+    lightShader.Use();
+    glUniformMatrix4fv(glGetUniformLocation(lightShader.GetID(), "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+    glUniform4f(glGetUniformLocation(lightShader.GetID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 
+    glm::vec3 objectPos = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::mat4 objectModel = glm::mat4(1.0f);
+	objectModel = glm::translate(objectModel, objectPos);
+
+    floorShader.Use();
+    glUniformMatrix4fv(glGetUniformLocation(floorShader.GetID(), "model"), 1, GL_FALSE, glm::value_ptr(objectModel));
+    glUniform4f(glGetUniformLocation(floorShader.GetID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+    glUniform3f(glGetUniformLocation(floorShader.GetID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
+	floorShader.SetInt("day", 1);
+    
     pCamera = new Camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 0.5f, 2.0f));
     while (!glfwWindowShouldClose(window))
     {
@@ -181,8 +266,20 @@ int main(int argc, char** argv)
         lastFrame = currentFrame;
         processInput(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        
+        if (buttonPressed) 
+        {
+            if (day)
+            {
+                skybox.setCubemapTexture(skybox.loadCubemap(dayFaces));
+                floorShader.SetInt("day", 1);
+            }
+            else if (!day)
+            {
+                skybox.setCubemapTexture(skybox.loadCubemap(nightFaces));
+                floorShader.SetInt("day", 0);
+            }
+            buttonPressed = false;
+        }
         glm::mat4 model;
         glm::mat4 projection = pCamera->GetProjectionMatrix();
         glm::mat4 view = pCamera->GetViewMatrix();
@@ -195,10 +292,14 @@ int main(int argc, char** argv)
             //glEnable(GL_DEPTH_TEST);
             //glEnable(GL_BLEND);
             glDepthMask(true);
-            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::mat4(1.0f);
             model = glm::translate(model, vegetation[i]);
 			grass.Draw(floorShader, *pCamera, model);
             revGrass.Draw(floorShader, *pCamera, model);
+        }
+        if (!day)
+        {
+            light.Draw(lightShader, *pCamera);
         }
         
         glfwSwapBuffers(window);
