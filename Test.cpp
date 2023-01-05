@@ -108,7 +108,7 @@ void processInput(GLFWwindow* window)
         buttonPressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {   
+    {
         day = true;
         buttonPressed = true;
     }
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Proiect", NULL, NULL);
-    
+
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -165,7 +165,7 @@ int main(int argc, char** argv)
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    
+
     glewInit();
     std::vector<std::string> dayFaces
     {
@@ -186,9 +186,9 @@ int main(int argc, char** argv)
             "../../../External/new_skybox_night/back.jpg"
     };
 
-    
+
     Skybox skybox(dayFaces);
-    
+
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -196,43 +196,50 @@ int main(int argc, char** argv)
     glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
 
-    
+
     std::string image = strExePath + "\\terrain.png";
-    Texture textures[]{Texture(image.c_str(), "texture1", 0, GL_RGBA, GL_UNSIGNED_BYTE)};
+    Texture textures[]{ Texture(image.c_str(), "texture1", 0, GL_RGBA, GL_UNSIGNED_BYTE) };
     GLuint floorTexId = textures[0].getTextureID();
 
-	std::string grassImage = strExePath + "\\grass.png";
-	Texture grassTextures[]{ Texture(grassImage.c_str(), "texture1", 0, GL_RGBA, GL_UNSIGNED_BYTE) };
-	GLuint grassTexId = grassTextures[0].getTextureID();
-    
+    std::string grassImage = strExePath + "\\grass.png";
+    Texture grassTextures[]{ Texture(grassImage.c_str(), "texture1", 0, GL_RGBA, GL_UNSIGNED_BYTE) };
+    GLuint grassTexId = grassTextures[0].getTextureID();
+
     // positions of grass patches
     std::vector <glm::vec3> vegetation;
     float high = 15.0f;
-    for (float i = -15.0f; i < high; i += 1.0f)
-    {
-        for (float j = -15.0f; j < high; j += 1.0f)
-        {
-            vegetation.emplace_back(glm::vec3(i, 0, j));
-        }
-    }
-    
-	Shader floorShader("Floor.vs", "Floor.fs");
+     for (float i = -15.0f; i < high; i += 1.0f)
+     {
+         for (float j = -15.0f; j < high; j += 1.0f)
+         {
+             vegetation.emplace_back(glm::vec3(i, 0, j));
+         }
+     }
+
+    Shader floorShader("Floor.vs", "Floor.fs");
 
     std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
     std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
     std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
-    
+
     std::vector <Vertex> grassVerts(grassVertices, grassVertices + sizeof(grassVertices) / sizeof(Vertex));
     std::vector <Texture> grassTex(grassTextures, grassTextures + sizeof(grassTextures) / sizeof(Texture));
-    
+
     std::vector <Vertex> revGrassVerts(revgrassVertices, revgrassVertices + sizeof(revgrassVertices) / sizeof(Vertex));
-    
+
+    const char* objFilePath = "../../../External/models/tank1/tank1.obj";
+    const char* texFilePath = "../../../External/models/tank1/tank1.jpg";
+    Model tank1(objFilePath, texFilePath, glm::vec3(0.0f, 0.0f, 0.0f));
+    //const char* objFilePath1 = "../../../External/models/eli3/Heli_bell.obj";
+    //const char* texFilePath1 = "../../../External/models/elicopter1/image2.jpg";
+    //Model eli1(objFilePath1, texFilePath1, glm::vec3(0.0f, 0.0f, 10.0f));
+
     Shader lightShader("Light.vs", "Light.fs");
     std::vector <Vertex> lightVerts(lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
     std::vector <GLuint> lightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
     // Crate light mesh
     Mesh light(lightVerts, lightInd, tex);
-    
+
     glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
     glm::mat4 lightModel = glm::mat4(1.0f);
@@ -240,7 +247,7 @@ int main(int argc, char** argv)
 
     // Create floor mesh
     Mesh floor(verts, ind, tex);
-	Mesh grass(grassVerts, ind, grassTex);
+    Mesh grass(grassVerts, ind, grassTex);
     Mesh revGrass(revGrassVerts, ind, grassTex);
 
     lightShader.Use();
@@ -248,16 +255,16 @@ int main(int argc, char** argv)
     glUniform4f(glGetUniformLocation(lightShader.GetID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 
     glm::vec3 objectPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::mat4 objectModel = glm::mat4(1.0f);
-	objectModel = glm::translate(objectModel, objectPos);
+    glm::mat4 objectModel = glm::mat4(1.0f);
+    objectModel = glm::translate(objectModel, objectPos);
 
     floorShader.Use();
     glUniformMatrix4fv(glGetUniformLocation(floorShader.GetID(), "model"), 1, GL_FALSE, glm::value_ptr(objectModel));
     glUniform4f(glGetUniformLocation(floorShader.GetID(), "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
     glUniform3f(glGetUniformLocation(floorShader.GetID(), "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
-	floorShader.SetInt("day", 1);
-    
+    floorShader.SetInt("day", 1);
+
     pCamera = new Camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 0.5f, 2.0f));
     while (!glfwWindowShouldClose(window))
     {
@@ -266,7 +273,7 @@ int main(int argc, char** argv)
         lastFrame = currentFrame;
         processInput(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (buttonPressed) 
+        if (buttonPressed)
         {
             if (day)
             {
@@ -284,30 +291,33 @@ int main(int argc, char** argv)
         glm::mat4 projection = pCamera->GetProjectionMatrix();
         glm::mat4 view = pCamera->GetViewMatrix();
         skybox.draw(view, projection);
-		model = glm::mat4();
+        model = glm::mat4();
         floorShader.Use();
         floor.Draw(floorShader, *pCamera);
         for (GLuint i = 0; i < vegetation.size(); ++i)
         {
-            //glEnable(GL_DEPTH_TEST);
-            //glEnable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
             glDepthMask(true);
             model = glm::mat4(1.0f);
             model = glm::translate(model, vegetation[i]);
-			grass.Draw(floorShader, *pCamera, model);
+            grass.Draw(floorShader, *pCamera, model);
             revGrass.Draw(floorShader, *pCamera, model);
         }
+        float angle = 90.0f;
+        model = glm::mat4(1.0f);
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(-1.0f, 0.0f, 0.0f));
+        model = model * rotation;
+        tank1.DrawModel(floorShader, *pCamera, model);
+        //eli1.DrawModel(floorShader, *pCamera, model);
         if (!day)
         {
             light.Draw(lightShader, *pCamera);
         }
-        
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
     glfwTerminate();
     return 0;
 }
-
-
-

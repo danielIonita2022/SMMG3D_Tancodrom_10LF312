@@ -1,9 +1,9 @@
 #pragma once
-#include <string>
-#include "Camera.h"
-#include "Texture.h"
-#include "VAO.h"
-#include "EBO.h"
+#include<string>
+#include"VAO.h"
+#include"EBO.h"
+#include"Camera.h"
+#include"Texture.h"
 
 class Mesh
 {
@@ -18,6 +18,8 @@ public:
 	// Initializes the mesh
 	Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, std::vector <Texture>& textures);
 
+	Mesh(std::vector <Vertex>& vertices, std::vector <Texture>& textures);
+	
 	// Draws the mesh
 	void Draw(Shader& shader, Camera& camera, glm::mat4 model = glm::mat4(1.0f));
 };
