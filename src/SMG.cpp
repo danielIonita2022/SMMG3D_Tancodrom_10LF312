@@ -322,8 +322,8 @@ int main(int argc, char** argv)
     // Crate light mesh
     //Mesh light(lightVerts, lightInd, tex);
 
-    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    glm::vec3 lightPos = glm::vec3(1.5f, 1.5f, 1.5f);
+    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.5f);
+    glm::vec3 lightPos = glm::vec3(-5.0f, 6.0f, 3.0f);
     glm::mat4 lightModel = glm::mat4(1.0f);
     lightModel = glm::translate(lightModel, lightPos);
 
