@@ -6,7 +6,8 @@ in vec3 Color;
 in vec2 TexCoords;
 in vec3 currentPos;
 
-uniform sampler2D texture1;
+uniform sampler2D bark;
+uniform sampler2D leaves
 uniform vec4 lightColor;
 uniform vec3 lightPos;
 uniform vec3 camPos;
@@ -20,7 +21,7 @@ void main()
         
         vec3 norm = normalize(Normal);
         vec3 lightDir = normalize(lightPos - currentPos);
-        float diffuse = max(dot(Normal, lightDir), 0.0f);
+        float diffuse = max(dot(Normal, lightDir), 0.2f);
 
         float specularLight = 0.5f;
         vec3 viewDir = normalize(camPos - currentPos);
@@ -28,16 +29,16 @@ void main()
         float specAmount = pow(max(dot(viewDir, reflectionDir), 0.0f), 8);
         float specular = specAmount * specularLight;
         
-        vec4 texColor = texture(texture1, TexCoords);
-        if(texColor.a < 0.1)
-            discard;
+        vec4 texColor = texture(bark, TexCoords) * texture(leaves, TexCoords);
+       // if(texColor.a < 0.1)
+       //     discard;
         FragColor = texColor * lightColor * (diffuse + ambient + specular);
     }
     else if (day == 1)
     {
-        vec4 texColor = texture(texture1, TexCoords);
-        if(texColor.a < 0.1)
-            discard;
+        vec4 texColor = texture(bark, TexCoords) * texture(leaves, TexCoords);
+       // if(texColor.a < 0.1)
+       //     discard;
         FragColor = texColor;
     }
 }
